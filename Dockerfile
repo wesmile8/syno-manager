@@ -24,6 +24,9 @@ RUN pip install --no-cache-dir -r requirements.txt
 # 复制项目文件
 COPY ..
 
+# 新增：临时查看 /app 目录下的文件列表（构建时会输出到控制台）
+RUN echo "=== 容器内 /app 目录文件列表 ===" && ls -l /app/
+
 # 创建上传目录并设置权限
 RUN mkdir -p /app/app/static/uploads && chmod 755 /app/app/static/uploads
 
@@ -34,4 +37,5 @@ EXPOSE 5000
 CMD ["gunicorn", "--bind", "0.0.0.0:5000", "run:app"]
 
     
+
 
