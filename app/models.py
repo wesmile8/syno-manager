@@ -1,4 +1,4 @@
-from syno_manager.app import db
+from ..app import db
 from datetime import datetime
 
 # 标签模型

@@ -1,7 +1,7 @@
 import os  # 新增这行导入语句
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
-from syno_manager.config import Config
+from ..config import Config
 
 
 # 初始化数据库

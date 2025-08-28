@@ -1,6 +1,6 @@
-from syno_manager.app import db
-from syno_manager.app.models import DiskArray, Tag, StoredFile
-from syno_manager.app.auth import login_required
+from ..app import db
+from ..app.models import DiskArray, Tag, StoredFile
+from ..app.auth import login_required
 from flask import Blueprint, render_template, request, redirect, url_for, flash, current_app
 import os
 import uuid
