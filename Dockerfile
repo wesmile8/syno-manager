@@ -22,11 +22,7 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # 复制项目文件
-COPY app/ /app/app/
-COPY instance/ /app/app/
-COPY config.py /app/      # 明确复制 config.py 到容器 /app/
-COPY run.py /app/         # 明确复制启动文件
-COPY requirements.txt /app/  # 明确复制依赖列表
+COPY ..
 
 # 创建上传目录并设置权限
 RUN mkdir -p /app/app/static/uploads && chmod 755 /app/app/static/uploads
@@ -38,3 +34,4 @@ EXPOSE 5000
 CMD ["gunicorn", "--bind", "0.0.0.0:5000", "run:app"]
 
     
+
