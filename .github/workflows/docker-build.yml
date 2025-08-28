@@ -28,7 +28,7 @@ jobs:
       id: meta
       uses: docker/metadata-action@v3
       with:
-        images: your-dockerhub-username/your-repo-name  # 替换为你的DockerHub用户名和仓库名
+        images: wesmile8/syno-manager  # 替换为你的DockerHub用户名和仓库名
     
     - name: Build and push
       uses: docker/build-push-action@v2
