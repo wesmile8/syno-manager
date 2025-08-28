@@ -1,4 +1,4 @@
-from syno2.app import create_app, db
+from syno_manager.app import create_app, db
 
 app = create_app()
 

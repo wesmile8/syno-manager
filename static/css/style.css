@@ -1,0 +1,88 @@
+/* 全局样式 */
+body {
+    background-color: #f8f9fa;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.container {
+    flex: 1;
+}
+
+/* 卡片样式增强 */
+.card {
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+}
+
+/* 进度条样式 */
+.progress {
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+/* 标签样式 */
+.badge {
+    transition: all 0.2s;
+}
+
+.badge:hover {
+    transform: scale(1.05);
+}
+
+/* 按钮样式增强 */
+.btn {
+    transition: all 0.2s;
+}
+
+.btn:hover {
+    transform: translateY(-2px);
+}
+
+/* 表单元素焦点样式 */
+.form-control:focus {
+    border-color: #80bdff;
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+}
+
+/* 图片样式 */
+.img-thumbnail {
+    border-radius: 8px;
+    transition: all 0.3s ease;
+    object-fit: cover;
+}
+
+.img-thumbnail:hover {
+    transform: scale(1.02);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* 列表视图样式 */
+.table-responsive {
+    overflow-x: auto;
+}
+
+.table-hover tbody tr:hover {
+    background-color: rgba(0, 0, 0, 0.05);
+}
+
+/* 响应式调整 */
+@media (max-width: 768px) {
+    .card-footer {
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .card-footer .btn {
+        width: 100%;
+    }
+
+    .btn-group {
+        flex-wrap: wrap;
+    }
+}

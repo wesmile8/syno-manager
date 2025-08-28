@@ -1,0 +1,302 @@
+{% extends 'base.html' %}
+
+{% block title %}阵列列表{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-6">
+        <h2>磁盘阵列统计</h2>
+    </div>
+    <div class="col-md-6 text-end">
+        <!-- 视图切换按钮 -->
+        <div class="btn-group me-2" role="group">
+            <a href="{{ url_for('main.index', tag_id=selected_tag_id, view='card') }}"
+               class="btn {% if view_mode == 'card' %}btn-primary{% else %}btn-outline-primary{% endif %}">
+                <i class="bi bi-grid-3x3-gap"></i> 卡片视图
+            </a>
+            <a href="{{ url_for('main.index', tag_id=selected_tag_id, view='list') }}"
+               class="btn {% if view_mode == 'list' %}btn-primary{% else %}btn-outline-primary{% endif %}">
+                <i class="bi bi-list"></i> 列表视图
+            </a>
+        </div>
+        <a href="{{ url_for('main.add_array') }}" class="btn btn-primary">
+            <i class="bi bi-plus-circle"></i> 添加新阵列
+        </a>
+    </div>
+</div>
+
+<!-- 标签筛选 -->
+<div class="card mb-4">
+    <div class="card-body">
+        <h5 class="card-title">按标签筛选</h5>
+        <div class="d-flex flex-wrap gap-2">
+            <a href="{{ url_for('main.index', view=view_mode) }}"
+               class="btn {% if not selected_tag_id %}btn-primary{% else %}btn-outline-primary{% endif %}">
+                全部
+            </a>
+            {% for tag in tags %}
+                <a href="{{ url_for('main.index', tag_id=tag.id, view=view_mode) }}"
+                   class="btn {% if selected_tag_id == tag.id %}btn-primary{% else %}btn-outline-primary{% endif %}">
+                    {{ tag.name }}
+                </a>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<!-- 卡片视图 -->
+{% if view_mode == 'card' %}
+<div class="row">
+    {% for array in arrays %}
+    <div class="col-md-6 col-lg-4 mb-4">
+        <div class="card h-100 shadow">
+            <div class="card-header {% if array.usage_percentage > 80 %}bg-danger{% elif array.usage_percentage > 60 %}bg-warning{% else %}bg-success{% endif %} text-white">
+                <h5 class="card-title mb-0">{{ array.model }}</h5>
+            </div>
+            <div class="card-body">
+                <!-- 显示实物图 -->
+                {% if array.image_list %}
+                <div class="mb-3">
+                    <div class="row row-cols-3 gap-1">
+                        {% for img_path in array.image_list[:3] %}
+                        <img src="{{ url_for('static', filename=img_path) }}"
+                             alt="{{ array.model }}实物图" class="img-thumbnail w-100"
+                             style="max-height: 100px; object-fit: contain;">
+                        {% endfor %}
+                        {% if array.image_list|length > 3 %}
+                        <div class="img-thumbnail w-100 d-flex align-items-center justify-content-center"
+                             style="max-height: 100px; background-color: #f8f9fa;">
+                            +{{ array.image_list|length - 3 }}
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endif %}
+
+                <p class="card-text"><strong>位置:</strong> {{ array.location or '未指定' }}</p>
+                <p class="card-text"><strong>SN码:</strong> {{ array.sn_code or '未填写' }}</p>
+
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between mb-1">
+                        <span><strong>存储空间:</strong></span>
+                        <span>{{ array.display_used_size }} {{ array.size_unit }} / {{ array.display_total_size }} {{ array.size_unit }} ({{ array.usage_percentage }}%)</span>
+                    </div>
+                    <div class="progress" style="height: 20px;">
+                        <div class="progress-bar {% if array.usage_percentage > 80 %}bg-danger{% elif array.usage_percentage > 60 %}bg-warning{% else %}bg-success{% endif %}"
+                             role="progressbar"
+                             style="width: {{ array.usage_percentage }}%"
+                             aria-valuenow="{{ array.usage_percentage }}"
+                             aria-valuemin="0"
+                             aria-valuemax="100">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <strong>标签:</strong>
+                    <div class="d-flex flex-wrap gap-1 mt-1">
+                        {% for tag in array.tags %}
+                            <span class="badge bg-secondary">{{ tag.name }}</span>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <div>
+                    <strong>存储文件:</strong>
+                    <ul class="list-group mt-2 mb-3" style="max-height: 100px; overflow-y: auto;">
+                        {% for file in array.files %}
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                {{ file.name }}
+                                <div class="d-flex align-items-center gap-2">
+                                    <span class="badge bg-primary rounded-pill">{{ file.display_size }} {{ file.size_unit }}</span>
+                                    <form method="POST" action="{{ url_for('main.delete_file', file_id=file.id) }}"
+                                          onsubmit="return confirm('确定要删除这个文件记录吗？');" class="mb-0">
+                                        <button type="submit" class="btn btn-sm btn-danger p-0" style="width: 24px; height: 24px;">
+                                            <i class="bi bi-x"></i>
+                                        </button>
+                                    </form>
+                                </div>
+                            </li>
+                        {% else %}
+                            <li class="list-group-item">无文件记录</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+            <div class="card-footer bg-light d-flex justify-content-between">
+                <!-- 编辑按钮 -->
+                <a href="{{ url_for('main.edit_array', array_id=array.id) }}" class="btn btn-sm btn-outline-warning">
+                    编辑
+                </a>
+
+                <!-- 添加文件按钮 -->
+                <button type="button" class="btn btn-sm btn-outline-primary"
+                        data-bs-toggle="modal" data-bs-target="#addFileModal{{ array.id }}">
+                    添加文件
+                </button>
+
+                <!-- 删除按钮 -->
+                <form method="POST" action="{{ url_for('main.delete_array', array_id=array.id) }}"
+                      onsubmit="return confirm('确定要删除这个阵列吗？相关文件记录和图片也会被删除。');">
+                    <button type="submit" class="btn btn-sm btn-outline-danger">删除</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- 添加文件模态框 -->
+    <div class="modal fade" id="addFileModal{{ array.id }}" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">为 {{ array.model }} 添加文件</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form method="POST" action="{{ url_for('main.add_file', array_id=array.id) }}">
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label for="file_name{{ array.id }}" class="form-label">文件名</label>
+                            <input type="text" class="form-control" id="file_name{{ array.id }}"
+                                   name="file_name" required>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-7">
+                                <label for="file_size{{ array.id }}" class="form-label">文件大小</label>
+                                <input type="number" step="0.01" min="0" class="form-control"
+                                       id="file_size{{ array.id }}" name="file_size" required>
+                            </div>
+                            <div class="col-md-5">
+                                <label for="file_unit{{ array.id }}" class="form-label">单位</label>
+                                <select class="form-select" id="file_unit{{ array.id }}" name="file_unit" required>
+                                    <option value="MB" selected>MB</option>
+                                    <option value="GB">GB</option>
+                                    <option value="TB">TB</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                        <button type="submit" class="btn btn-primary">添加</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="col-12">
+        <div class="alert alert-info">
+            暂无磁盘阵列数据，请添加新的磁盘阵列。
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+<!-- 列表视图 -->
+{% if view_mode == 'list' %}
+<div class="card shadow">
+    <div class="table-responsive">
+        <table class="table table-hover mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th>阵列型号</th>
+                    <th>SN码</th>
+                    <th>存储空间</th>
+                    <th>使用率</th>
+                    <th>操作</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for array in arrays %}
+                <tr>
+                    <td>{{ array.model }}</td>
+                    <td>{{ array.sn_code or '未填写' }}</td>
+                    <td>
+                        {{ array.display_used_size }} {{ array.size_unit }} /
+                        {{ array.display_total_size }} {{ array.size_unit }}
+                    </td>
+                    <td>
+                        <div class="progress" style="height: 15px; width: 100px;">
+                            <div class="progress-bar {% if array.usage_percentage > 80 %}bg-danger{% elif array.usage_percentage > 60 %}bg-warning{% else %}bg-success{% endif %}"
+                                 style="width: {{ array.usage_percentage }}%">
+                                {{ array.usage_percentage }}%
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="btn-group btn-group-sm">
+                            <a href="{{ url_for('main.edit_array', array_id=array.id) }}" class="btn btn-outline-warning">
+                                编辑
+                            </a>
+                            <button type="button" class="btn btn-outline-primary"
+                                    data-bs-toggle="modal" data-bs-target="#addFileModal{{ array.id }}">
+                                添加文件
+                            </button>
+                            <form method="POST" action="{{ url_for('main.delete_array', array_id=array.id) }}"
+                                  onsubmit="return confirm('确定要删除这个阵列吗？');" class="ms-1">
+                                <button type="submit" class="btn btn-sm btn-outline-danger">删除</button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+
+                <!-- 添加文件模态框（列表视图共用） -->
+                <div class="modal fade" id="addFileModal{{ array.id }}" tabindex="-1" aria-hidden="true">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title">为 {{ array.model }} 添加文件</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+                            <form method="POST" action="{{ url_for('main.add_file', array_id=array.id) }}">
+                                <div class="modal-body">
+                                    <div class="mb-3">
+                                        <label for="file_name{{ array.id }}" class="form-label">文件名</label>
+                                        <input type="text" class="form-control" id="file_name{{ array.id }}"
+                                               name="file_name" required>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-7">
+                                            <label for="file_size{{ array.id }}" class="form-label">文件大小</label>
+                                            <input type="number" step="0.01" min="0" class="form-control"
+                                                   id="file_size{{ array.id }}" name="file_size" required>
+                                        </div>
+                                        <div class="col-md-5">
+                                            <label for="file_unit{{ array.id }}" class="form-label">单位</label>
+                                            <select class="form-select" id="file_unit{{ array.id }}" name="file_unit" required>
+                                                <option value="MB" selected>MB</option>
+                                                <option value="GB">GB</option>
+                                                <option value="TB">TB</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                                    <button type="submit" class="btn btn-primary">添加</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                {% else %}
+                <tr>
+                    <td colspan="5" class="text-center py-3">
+                        <div class="alert alert-info mb-0">
+                            暂无磁盘阵列数据，请添加新的磁盘阵列。
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<!-- 引入Bootstrap图标 -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+{% endblock %}
